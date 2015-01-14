@@ -11,45 +11,45 @@ logging.basicConfig(format=u'[%(asctime)s]  %(message)s', level=logging.INFO)
 class Game(object):
 	def __init__(self):
 		logging.info(u'Начало игры')
-		self.user_list = self.create_users()
-		self.curr_user = None
+		self.player_list = self.create_players()
+		self.curr_player = None
 
-	def create_users(self):
-		self.user_list = []
+	def create_players(self):
+		self.player_list = []
 		for u in range(2):
-			self.user_list.append(User())
-		logging.info(u'Игроки: %s', ", ".join([x.user_name for x in self.user_list]))
-		return self.user_list
+			self.player_list.append(Player())
+		logging.info(u'Игроки: %s', ", ".join([x.player_name for x in self.player_list]))
+		return self.player_list
 
 	def game(self):
 		# Выбираем игрока для первого хода
-		if self.curr_user is None:
-			self.curr_user = choice(self.user_list)
+		if self.curr_player is None:
+			self.curr_player = choice(self.player_list)
 		# Получаем координаты для хода
-		crd_for_shoot = self.curr_user.step()
+		crd_for_shoot = self.curr_player.step()
 		# Выделяем второго игрока из списка
-		user2 = filter(lambda x: x != self.curr_user, self.user_list)[0]
+		user2 = filter(lambda x: x != self.curr_player, self.player_list)[0]
 		# Ходим и сохраняем результаты хода
 		shoot_res = user2.shoot(crd_for_shoot)
 		# Передаём результаты хода ходившему игроку
-		logging.info(u'Ходит: %s, координаты: %s, статус: %s', self.curr_user.user_name, crd_for_shoot, shoot_res)
-		self.curr_user.return_shoot_state(shoot_res, crd_for_shoot)
+		logging.info(u'Ходит: %s, координаты: %s, статус: %s', self.curr_player.player_name, crd_for_shoot, shoot_res)
+		self.curr_player.return_shoot_state(shoot_res, crd_for_shoot)
 		# Меняем счётчик текущего пользователя, если ходивший промазал
 		if shoot_res == u'Мимо!':
-			self.curr_user = user2
+			self.curr_player = user2
 		# Конец игры и вывод статистики
 		elif shoot_res == u'Убил последний корабль!':
-			self.curr_user.scores += 1
-			logging.info(u'Выйграл: %s', self.curr_user.user_name)
-			logging.info(u'%s', ", ".join([str(x.user_name) + u" набрал очков:  " + str(x.scores) + u", ходов: " + str(x.steps) for x in self.user_list]))
+			self.curr_player.scores += 1
+			logging.info(u'Выйграл: %s', self.curr_player.player_name)
+			logging.info(u'%s', ", ".join([str(x.player_name) + u" набрал очков:  " + str(x.scores) + u", ходов: " + str(x.steps) for x in self.player_list]))
 			return
 		# Если игра продолжается, то перезапускаем функцию game()
 		return self.game()
 
 
-class User(object):
+class Player(object):
 	def __init__(self):
-		self.user_name = service.rdn_usr_name()
+		self.player_name = service.rdn_usr_name()
 		self.combinations = deepcopy(service.GLOBAL_DATA)
 		self.ships = self.create_ships()
 		self.alien = []
@@ -116,7 +116,7 @@ class User(object):
 				crd_rec = filter(lambda x: 0 <= x[0] <= 9 and 0 <= x[1] <= 9, crd_rec)
 				crd_rec = filter(lambda x: x not in self.alien, crd_rec)
 				self.succ_shoots.append(crd)
-				return self.recomendation_pool.extend(crd_rec)
+				self.recomendation_pool.extend(crd_rec)
 			else:
 				crd_s1 = self.recomendation_pool[0]
 				crd_s2 = self.succ_shoots[0]
@@ -128,7 +128,7 @@ class User(object):
 							crd_rec = [[crd_s1[ind]-1, crd_s1[ind]-2], [crd_s2[ind]+1, crd_s2[ind]+2]]
 						crd_rec = filter(lambda x: 0 <= x[0] <= 9 and 0 <= x[1] <= 9, crd_rec)
 						crd_rec = filter(lambda x: x not in self.alien, crd_rec)
-						return self.recomendation_pool.extend(crd_rec)
+						self.recomendation_pool.extend(crd_rec)
 		elif state == u'Убил!':
 			self.scores += 1
 			self.recomendation_pool = []
