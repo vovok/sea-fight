@@ -28,15 +28,15 @@ class Game(object):
 		# Получаем координаты для хода
 		crd_for_shoot = self.curr_player.step()
 		# Выделяем второго игрока из списка
-		user2 = filter(lambda x: x != self.curr_player, self.player_list)[0]
+		player2 = filter(lambda x: x != self.curr_player, self.player_list)[0]
 		# Ходим и сохраняем результаты хода
-		shoot_res = user2.shoot(crd_for_shoot)
+		shoot_res = player2.shoot(crd_for_shoot)
 		# Передаём результаты хода ходившему игроку
 		logging.info(u'Ходит: %s, координаты: %s, статус: %s', self.curr_player.player_name, crd_for_shoot, shoot_res)
 		self.curr_player.return_shoot_state(shoot_res, crd_for_shoot)
 		# Меняем счётчик текущего пользователя, если ходивший промазал
 		if shoot_res == u'Мимо!':
-			self.curr_player = user2
+			self.curr_player = player2
 		# Конец игры и вывод статистики
 		elif shoot_res == u'Убил последний корабль!':
 			self.curr_player.scores += 1
