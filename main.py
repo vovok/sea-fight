@@ -30,7 +30,7 @@ class Game(object):
 		shoot_res = player2.shoot(crd_for_shoot)
 		# Передаём результаты хода ходившему игроку
 		#logging.info(u'Ходит: %s, координаты: %s, статус: %s', self.curr_player.player_name, crd_for_shoot, shoot_res)
-		self.curr_player.return_shoot_state(shoot_res, crd_for_shoot)
+		self.curr_player.return_shoot_state(shoot_res, crd_for_shoot, player2)
 		# Меняем счётчик текущего пользователя, если ходивший промазал
 		if shoot_res == u'Мимо!':
 			self.curr_player = player2
@@ -109,7 +109,7 @@ class Player(object):
 			self.steps += 1
 			return crd
 
-	def return_shoot_state(self, state, crd):
+	def return_shoot_state(self, state, crd, player2):
 		"""Стратегия дальнейщих ходов в зависимости от результата текущего хода"""
 		if state == u'Попал!':
 			self.scores += 1
@@ -132,6 +132,9 @@ class Player(object):
 						crd_rec = filter(lambda x: x not in self.alien, crd_rec)
 						self.recomendation_pool.extend(crd_rec)
 		elif state == u'Убил!':
+			for ship in player2.ships:
+				if crd in ship.cord:
+					self.alien.extend(ship.halo)
 			self.scores += 1
 			self.recomendation_pool = []
 			self.succ_shoots = []
@@ -167,7 +170,7 @@ class Ship(object):
 	def __init__(self, ship_type, cord, halo):
 		self.ship_type = ship_type
 		self.cord = cord
-		self.overlay = halo
+		self.halo = halo
 		self.shoots = []
 		self.state = u''
 
@@ -183,17 +186,19 @@ class Statistic(object):
 		self.step_all = []
 		self.step_winners = []
 		self.scores_loosers = []
+		self.step_loosers = []
 
 	def get_stats(self, player_list):
 		for pl in player_list:
 			self.step_all.append(pl.steps)
 			if len(pl.ships_defeat) == 10:
 				self.scores_loosers.append(pl.scores)
+				self.step_loosers.append(pl.steps)
 			else:
 				self.step_winners.append(pl.steps)
 
 	def count_middles(self):
-		return sum(self.step_all)/float(len(self.step_all)), sum(self.step_winners)/float(len(self.step_winners)), sum(self.scores_loosers)/float(len(self.scores_loosers))
+		return sum(self.step_all)/float(len(self.step_all)), sum(self.step_winners)/float(len(self.step_winners)), sum(self.step_loosers)/float(len(self.step_loosers)), sum(self.scores_loosers)/float(len(self.scores_loosers))
 
 
 if __name__ == '__main__':
@@ -211,5 +216,5 @@ if __name__ == '__main__':
 		tur_player_list_next_iter = []
 	else:
 		info(u'Турнир выйграл: %s, набрал очков: %s', tur_player_list[0].player_name, tur_player_list[0].tur_scores)
-	med_step_all, med_step_win, med_score_looser = stats.count_middles()
-	info(u'Статистика: \n\t1. Среднее количесво ходов: %.2f,\n\t2. Среднее количество ходов выйгравших игроков: %.2f,\n\t3. Среднее количество очков, которое набрали проигравшие: %.2f', med_step_all, med_step_win, med_score_looser)
+	med_step_all, med_step_win, med_step_looser, med_score_looser = stats.count_middles()
+	info(u'Статистика: \n\t1. Среднее количесво ходов (всех игроков): %.2f,\n\t2. Среднее количество ходов выйгравших игроков: %.2f,\n\t3. Среднее количество ходов проигравших игроков: %.2f,\n\t4. Среднее количество очков, которое набрали проигравшие: %.2f', med_step_all, med_step_win, med_step_looser,med_score_looser)
